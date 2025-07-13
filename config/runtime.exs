@@ -26,3 +26,7 @@ if config_env() == :prod do
     ],
     server: true
 end
+
+config :payment_services,
+  default_url: System.get_env("PAYMENT_SERVICE_URL_DEFAULT"),
+  fallback_url: System.get_env("PAYMENT_SERVICE_URL_FALLBACK")

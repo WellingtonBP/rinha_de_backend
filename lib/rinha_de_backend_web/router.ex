@@ -5,7 +5,9 @@ defmodule RinhaDeBackendWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/api", RinhaDeBackendWeb do
+  scope "/", RinhaDeBackendWeb do
     pipe_through :api
+
+    get "/healthcheck", PaymentsController, :payment_service_healthcheck
   end
 end

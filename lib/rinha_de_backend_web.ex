@@ -35,13 +35,6 @@ defmodule RinhaDeBackendWeb do
     end
   end
 
-  def view do
-    quote do
-      use Phoenix.view(),
-        namespace: RinhaDeBackendWeb
-    end
-  end
-
   def controller do
     quote do
       use Phoenix.Controller,
