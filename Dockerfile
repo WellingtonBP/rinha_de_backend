@@ -1,7 +1,6 @@
 FROM elixir:1.18.4-otp-26-alpine AS build
 
-ARG mix_env="prod"
-ENV MIX_ENV=$mix_env
+ENV MIX_ENV="prod"
 
 RUN apk update && apk add --no-cache build-base
 
@@ -23,8 +22,7 @@ RUN mix do compile, release
 
 FROM alpine:3.22.0 AS APP
 
-ARG mix_env="prod"
-ENV MIX_ENV=$mix_env
+ENV MIX_ENV="prod"
 
 RUN apk update && apk add --no-cache ncurses-libs libstdc++
 

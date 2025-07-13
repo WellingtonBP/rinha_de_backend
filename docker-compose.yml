@@ -3,7 +3,6 @@ x-service-templates:
     build: .
     environment:
       DB_CONN_URL: ecto://root:root@rinha-db/db
-      MIX_ENV: prod
       PAYMENT_SERVICE_URL_DEFAULT: http://payment-processor-default:8080
       PAYMENT_SERVICE_URL_FALLBACK: http://payment-processor-fallback:8080
     networks:
@@ -13,7 +12,7 @@ x-service-templates:
       resources:
         limits:
           cpus: '0.35'
-          memory: '70MB'
+          memory: '80MB'
 
   db: &db
     image: postgres:17-alpine
@@ -29,7 +28,7 @@ x-service-templates:
       resources:
         limits:
           cpus: '0.65'
-          memory: '140MB'
+          memory: '130MB'
 
   server: &server
     image: nginx:1.27.5-alpine
@@ -41,7 +40,7 @@ x-service-templates:
       resources:
         limits:
           cpus: '0.15'
-          memory: '70MB'
+          memory: '60MB'
 
 services:
   db:
