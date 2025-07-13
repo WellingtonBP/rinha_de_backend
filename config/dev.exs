@@ -2,13 +2,13 @@ import Config
 
 # Configure your database
 config :rinha_de_backend, RinhaDeBackend.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  database: "rinha_de_backend_dev",
+  username: System.get_env("DB_USER"),
+  password: System.get_env("DB_PASSWORD"),
+  hostname: System.get_env("DB_HOST"),
+  database: System.get_env("DB_NAME"),
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  pool_size: 5
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
@@ -61,6 +61,3 @@ config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
-
-# Disable swoosh api client as it is only required for production adapters.
-config :swoosh, :api_client, false
