@@ -21,7 +21,15 @@ defmodule RinhaDeBackend.Payments.Integrations.PaymentService do
       |> Finch.request(RinhaDeBackend.Finch)
       |> case do
         {:ok, %Finch.Response{status: 200, body: body}} ->
-          {service, JSON.decode!(body)}
+          body
+          |> JSON.decode()
+          |> then(fn
+            {:ok, %{"failing" => failing, "minResponseTime" => time}} ->
+              {service, %{failing: failing, min_response_time: time}}
+
+            {:error, _} ->
+              {service, :error}
+          end)
 
         _ ->
           {service, :error}

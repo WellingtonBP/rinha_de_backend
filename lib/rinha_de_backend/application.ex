@@ -8,16 +8,10 @@ defmodule RinhaDeBackend.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      RinhaDeBackendWeb.Telemetry,
       RinhaDeBackend.Repo,
-      {DNSCluster, query: Application.get_env(:rinha_de_backend, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: RinhaDeBackend.PubSub},
-      # Start the Finch HTTP client for sending emails
       {Finch, name: RinhaDeBackend.Finch},
-      # Start a worker by calling: RinhaDeBackend.Worker.start_link(arg)
-      # {RinhaDeBackend.Worker, arg},
-      # Start to serve requests, typically the last entry
-      RinhaDeBackendWeb.Endpoint
+      RinhaDeBackendWeb.Endpoint,
+      RinhaDeBackend.Payments.Workers.ServicesStatus
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
