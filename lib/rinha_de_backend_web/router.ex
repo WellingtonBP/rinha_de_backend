@@ -8,6 +8,6 @@ defmodule RinhaDeBackendWeb.Router do
   scope "/", RinhaDeBackendWeb do
     pipe_through :api
 
-    get "/healthcheck", PaymentsController, :payment_service_healthcheck
+    post "/payments", PaymentsController, :add_payment
   end
 end

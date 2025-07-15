@@ -3,12 +3,9 @@ defmodule RinhaDeBackend.Payments.Schemas.Payments do
   import Ecto.Changeset
 
   @primary_key {:correlation_id, :binary_id, autogenerate: false}
-  @payment_status_values ~w(PENDING APPROVED)a
-  @required_fields ~w(correlation_id status amount service_name)a
-  @optional_fields ~w()a
 
   schema "payments" do
-    field :status, Ecto.Enum, values: @payment_status_values
+    field :status, Ecto.Enum, values: [:PENDING, :APPROVED]
     field :amount, :decimal
     field :service_name, :string
     timestamps(type: :utc_datetime)
@@ -16,8 +13,8 @@ defmodule RinhaDeBackend.Payments.Schemas.Payments do
 
   def changeset(%__MODULE__{} = payment, attrs \\ %{}) do
     payment
-    |> cast(attrs, @optional_fields ++ @required_fields)
-    |> validate_required(@required_fields)
+    |> cast(attrs, [:status, :amount, :service_name])
+    |> validate_required([:status, :amount])
   end
 
   def get_errors_message(changeset) do
