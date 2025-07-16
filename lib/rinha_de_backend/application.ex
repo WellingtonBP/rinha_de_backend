@@ -12,7 +12,7 @@ defmodule RinhaDeBackend.Application do
       {Finch, name: RinhaDeBackend.Finch},
       RinhaDeBackendWeb.Endpoint,
       RinhaDeBackend.Payments.Workers.ServicesStatus,
-      RinhaDeBackend.Payments.Workers.PaymentProcessSupervisor
+      RinhaDeBackend.Payments.Workers.PaymentProcess
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

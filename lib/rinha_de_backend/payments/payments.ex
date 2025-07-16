@@ -1,35 +1,13 @@
 defmodule RinhaDeBackend.Payments do
   alias RinhaDeBackend.Repo
   alias RinhaDeBackend.Payments.Schemas.Payments
-  alias RinhaDeBackend.Payments.Workers.PaymentProcessSupervisor
+  alias RinhaDeBackend.Payments.Workers.PaymentProcess
 
   import Ecto.Query
 
   def new_payment(%{"correlationId" => cid, "amount" => amount}) do
-    data = %{correlation_id: cid, amount: amount, status: :PENDING}
-
-    %Payments{correlation_id: cid}
-    |> Payments.changeset(data)
-    |> then(fn changeset ->
-      case Payments.get_errors_message(changeset) do
-        nil ->
-          changeset
-          |> Repo.insert()
-          |> case do
-            {:ok, changeset} ->
-              data
-              |> Map.put(:inserted_at, Map.get(changeset, :inserted_at))
-              |> tap(&PaymentProcessSupervisor.process(&1))
-              |> then(&%{data: &1})
-
-            _ ->
-              :server_error
-          end
-
-        error ->
-          error
-      end
-    end)
+    %{correlation_id: cid, amount: amount}
+    |> PaymentProcess.new()
   end
 
   def summary(params) do
@@ -37,11 +15,24 @@ defmodule RinhaDeBackend.Payments do
     |> select([p], {p.service_name, count(p.correlation_id), sum(p.amount)})
     |> maybe_filter_from(params[:from])
     |> maybe_filter_to(params[:to])
-    |> where([p], p.status == :APPROVED)
     |> group_by([p], p.service_name)
     |> Repo.all()
-    |> Enum.into(%{}, fn {service_name, total_requests, total_amount} ->
-      {service_name, %{"totalRequests" => total_requests, "totalAmount" => total_amount}}
+    |> then(fn result ->
+      fallback = Enum.find(result, fn tuple -> elem(tuple, 0) == "fallback" end)
+      default = Enum.find(result, fn tuple -> elem(tuple, 0) == "default" end)
+
+      %{
+        fallback: %{
+          "totalRequests" => if(not is_nil(fallback), do: elem(fallback, 1), else: 0),
+          "totalAmount" =>
+            if(not is_nil(fallback), do: Decimal.to_float(elem(fallback, 2)), else: 0)
+        },
+        default: %{
+          "totalRequests" => if(not is_nil(default), do: elem(default, 1), else: 0),
+          "totalAmount" =>
+            if(not is_nil(default), do: Decimal.to_float(elem(default, 2)), else: 0)
+        }
+      }
     end)
   end
 

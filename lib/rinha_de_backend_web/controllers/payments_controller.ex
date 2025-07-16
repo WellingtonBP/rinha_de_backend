@@ -3,29 +3,9 @@ defmodule RinhaDeBackendWeb.PaymentsController do
 
   alias RinhaDeBackend.Payments
 
-  def add_payment(conn, %{"correlationId" => _, "amount" => _} = body) do
-    body
-    |> Payments.new_payment()
-    |> case do
-      :server_error ->
-        conn
-        |> put_status(500)
-        |> json(%{})
-
-      %{errors: _} = e ->
-        conn
-        |> put_status(400)
-        |> json(e)
-
-      response ->
-        json(conn, response)
-    end
-  end
-
-  def add_payment(conn, _) do
-    conn
-    |> put_status(400)
-    |> json(%{errors: "invalid request"})
+  def add_payment(conn, body) do
+    Payments.new_payment(body)
+    send_resp(conn, 204, "")
   end
 
   def summary(conn, params) do
