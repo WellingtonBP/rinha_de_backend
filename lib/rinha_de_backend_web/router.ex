@@ -9,5 +9,6 @@ defmodule RinhaDeBackendWeb.Router do
     pipe_through :api
 
     post "/payments", PaymentsController, :add_payment
+    get "/payments-summary", PaymentsController, :summary
   end
 end
