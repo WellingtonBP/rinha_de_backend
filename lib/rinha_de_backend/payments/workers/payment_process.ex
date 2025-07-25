@@ -71,7 +71,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
             payment_with_date_and_service
         end
       end,
-      max_concurrency: 22
+      max_concurrency: 10
     )
     |> Enum.reduce([], fn
       {:ok, nil}, acc -> acc
