@@ -11,8 +11,8 @@ x-service-templates:
     deploy:
       resources:
         limits:
-          cpus: '0.60'
-          memory: '132MB'
+          cpus: '0.65'
+          memory: '131MB'
 
   db: &db
     image: postgres:17-alpine
@@ -22,13 +22,14 @@ x-service-templates:
       POSTGRES_DB: db
     volumes:
       - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - rinha-backend-ex
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: '80MB'
+          cpus: '0.1'
+          memory: '78MB'
 
   server: &server
     image: nginx:1.27.5-alpine
@@ -41,8 +42,8 @@ x-service-templates:
     deploy:
       resources:
         limits:
-          cpus: '0.05'
-          memory: '6MB'
+          cpus: '0.1'
+          memory: '10MB'
 
 services:
   db:

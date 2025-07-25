@@ -8,8 +8,5 @@ defmodule RinhaDeBackend.Repo.Migrations.CreatePaymentsTable do
       add(:service_name, :string)
       add(:inserted_at, :utc_datetime_usec)
     end
-
-    create index(:payments, [:service_name])
-    create index(:payments, [:inserted_at])
   end
 end

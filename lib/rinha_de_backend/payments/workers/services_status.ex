@@ -18,7 +18,7 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
   end
 
   def get_status do
-    GenServer.call(__MODULE__, :get)
+    GenServer.call(__MODULE__, :get, :infinity)
   end
 
   def schedule do

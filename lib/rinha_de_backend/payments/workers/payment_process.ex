@@ -22,7 +22,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   end
 
   def handle_info(:process, []) do
-    Process.send_after(self(), :process, 50)
+    Process.send_after(self(), :process, 10)
     {:noreply, []}
   end
 
@@ -31,14 +31,14 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
     |> handle_services_status()
     |> case do
       :none ->
-        Process.send_after(self(), :process, 50)
+        Process.send_after(self(), :process, 10)
         {:noreply, payments}
 
       service ->
         service
         |> process_for_service(payments)
         |> then(fn processed ->
-          Process.send_after(self(), :process, 50)
+          Process.send_after(self(), :process, 10)
 
           filtered_payments =
             Enum.filter(payments, fn payment ->
@@ -71,7 +71,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
             payment_with_date_and_service
         end
       end,
-      max_concurrency: 300
+      max_concurrency: 22
     )
     |> Enum.reduce([], fn
       {:ok, nil}, acc -> acc
@@ -81,12 +81,12 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   end
 
   defp handle_services_status(%{default: %{failing: false, min_response_time: delay}})
-       when delay <= 100 do
+       when delay <= 0 do
     :default
   end
 
   defp handle_services_status(%{fallback: %{failing: false, min_response_time: delay}})
-       when delay <= 50 do
+       when delay <= 0 do
     :fallback
   end
 
