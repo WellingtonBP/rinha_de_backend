@@ -5,28 +5,16 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
   alias RinhaDeBackend.Payments.Integrations.PaymentService
   alias RinhaDeBackend.Repo
 
-  def start_link(_), do: GenServer.start_link(__MODULE__, :no_args, name: __MODULE__)
+  def start_link(_), do: GenServer.start_link(__MODULE__, :no_args)
 
   def init(_) do
     schedule()
 
-    {:ok,
-     %{
-       default: %{failing: false, min_response_time: 0},
-       fallback: %{failing: false, min_response_time: 0}
-     }}
-  end
-
-  def get_status do
-    GenServer.call(__MODULE__, :get, :infinity)
+    {:ok, :no_args}
   end
 
   def schedule do
     Process.send_after(self(), :run, 5001)
-  end
-
-  def handle_call(:get, _, state) do
-    {:reply, state, state}
   end
 
   def handle_info(:run, _) do
@@ -46,7 +34,8 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
     end)
     |> then(fn {:ok, state} ->
       schedule()
-      {:noreply, state}
+      set_status(state)
+      {:noreply, :no_args}
     end)
   end
 
@@ -83,5 +72,16 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
         |> then(&PaymentServices.changeset(%PaymentServices{name: to_string(service)}, &1))
         |> Repo.update()
     end)
+  end
+
+  defp set_status(state) do
+    :persistent_term.put(:services_status, state)
+  end
+
+  def get_status do
+    :persistent_term.get(:services_status, %{
+      default: %{failing: false, min_response_time: 0},
+      fallback: %{failing: false, min_response_time: 0}
+    })
   end
 end
