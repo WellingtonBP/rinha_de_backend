@@ -22,7 +22,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   end
 
   def handle_info(:process, []) do
-    Process.send_after(self(), :process, 0)
+    Process.send_after(self(), :process, 50)
     {:noreply, []}
   end
 
@@ -31,46 +31,62 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
     |> handle_services_status()
     |> case do
       :none ->
-        Process.send_after(self(), :process, 0)
+        Process.send_after(self(), :process, 50)
         {:noreply, payments}
 
       service ->
         service
         |> process_for_service(payments)
-        |> tap(&insert_payments/1)
         |> then(fn processed ->
-          Process.send_after(self(), :process, 0)
+          Process.send_after(self(), :process, 50)
 
-          {:noreply, Enum.slice(payments, Kernel.length(processed), Kernel.length(payments))}
+          filtered_payments =
+            Enum.filter(payments, fn payment ->
+              not Enum.any?(processed, fn processed_payment ->
+                Map.get(processed_payment, :correlation_id) == Map.get(payment, :correlation_id)
+              end)
+            end)
+
+          {:noreply, filtered_payments}
         end)
     end
   end
 
   def process_for_service(service, payments) do
     payments
-    |> Enum.reduce_while([], fn payment, processed ->
-      date = DateTime.truncate(DateTime.utc_now(), :second)
-      payment_with_date = Map.put(payment, :inserted_at, date)
+    |> Task.async_stream(
+      fn payment ->
+        payment_with_date_and_service =
+          DateTime.utc_now()
+          |> then(&Map.put(payment, :inserted_at, &1))
+          |> Map.put(:service_name, to_string(service))
 
-      service
-      |> PaymentService.do_payment(payment_with_date)
-      |> case do
-        :error ->
-          {:halt, processed}
+        service
+        |> PaymentService.do_payment(payment_with_date_and_service)
+        |> case do
+          :error ->
+            nil
 
-        :ok ->
-          {:cont, [Map.put(payment_with_date, :service_name, to_string(service)) | processed]}
-      end
+          :ok ->
+            payment_with_date_and_service
+        end
+      end,
+      max_concurrency: 300
+    )
+    |> Enum.reduce([], fn
+      {:ok, nil}, acc -> acc
+      {:ok, payment}, acc -> [payment | acc]
     end)
+    |> tap(&insert_payments/1)
   end
 
   defp handle_services_status(%{default: %{failing: false, min_response_time: delay}})
-       when delay <= 3000 do
+       when delay <= 100 do
     :default
   end
 
   defp handle_services_status(%{fallback: %{failing: false, min_response_time: delay}})
-       when delay <= 3000 do
+       when delay <= 50 do
     :fallback
   end
 

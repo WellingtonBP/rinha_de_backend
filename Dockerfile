@@ -1,7 +1,7 @@
 FROM elixir:1.18.4-otp-26-alpine AS build
 
 ENV MIX_ENV="prod"
-ENV ERL_AFLAGS="-kernel shell_history enabled false +S 1 +P 65536 +A 2 +sbwt none +sbwtdcpu none +sbwtdio none"
+ENV ERL_AFLAGS="-kernel shell_history enabled false +S 1 +P 120000 +A 18 +sbwt none +sbwtdcpu none +sbwtdio none"
 
 RUN apk update && apk add --no-cache build-base
 
@@ -21,10 +21,10 @@ COPY start.sh start.sh
 
 RUN mix do compile, release
 
-FROM alpine:3.22.0 AS APP
+FROM alpine:3.22.0 AS app
 
 ENV MIX_ENV="prod"
-ENV ERL_AFLAGS="-kernel shell_history enabled false +S 1 +P 65536 +A 2 +sbwt none +sbwtdcpu none +sbwtdio none"
+ENV ERL_AFLAGS="-kernel shell_history enabled false +S 1 +P 120000 +A 18 +sbwt none +sbwtdcpu none +sbwtdio none"
 
 RUN apk update && apk add --no-cache ncurses-libs libstdc++
 

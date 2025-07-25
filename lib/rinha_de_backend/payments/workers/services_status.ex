@@ -22,7 +22,7 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
   end
 
   def schedule do
-    Process.send_after(self(), :run, 5000)
+    Process.send_after(self(), :run, 5001)
   end
 
   def handle_call(:get, _, state) do

@@ -9,7 +9,11 @@ defmodule RinhaDeBackend.Application do
   def start(_type, _args) do
     children = [
       RinhaDeBackend.Repo,
-      {Finch, name: RinhaDeBackend.Finch},
+      {Finch,
+       name: RinhaDeBackend.Finch,
+       pools: %{
+         :default => [size: 30, count: 10]
+       }},
       RinhaDeBackendWeb.Endpoint,
       RinhaDeBackend.Payments.Workers.ServicesStatus,
       RinhaDeBackend.Payments.Workers.PaymentProcess

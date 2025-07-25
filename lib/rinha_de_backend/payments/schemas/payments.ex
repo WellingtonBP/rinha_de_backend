@@ -7,7 +7,7 @@ defmodule RinhaDeBackend.Payments.Schemas.Payments do
   schema "payments" do
     field :amount, :decimal
     field :service_name, :string
-    field :inserted_at, :utc_datetime
+    field :inserted_at, :utc_datetime_usec
   end
 
   def changeset(%__MODULE__{} = payment, attrs \\ %{}) do

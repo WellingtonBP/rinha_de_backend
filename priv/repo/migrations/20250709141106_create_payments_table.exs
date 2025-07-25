@@ -6,7 +6,10 @@ defmodule RinhaDeBackend.Repo.Migrations.CreatePaymentsTable do
       add(:correlation_id, :binary_id, primary_key: true)
       add(:amount, :decimal)
       add(:service_name, :string)
-      add(:inserted_at, :utc_datetime)
+      add(:inserted_at, :utc_datetime_usec)
     end
+
+    create index(:payments, [:service_name])
+    create index(:payments, [:inserted_at])
   end
 end
