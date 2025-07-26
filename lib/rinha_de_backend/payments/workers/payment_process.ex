@@ -9,7 +9,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   def start_link(_), do: GenServer.start_link(__MODULE__, :no_args, name: __MODULE__)
 
   def init(_) do
-    Process.send_after(self(), :process, 500)
+    Process.send_after(self(), :process, 1000)
     {:ok, []}
   end
 
@@ -22,7 +22,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   end
 
   def handle_info(:process, []) do
-    Process.send_after(self(), :process, 10)
+    Process.send_after(self(), :process, 100)
     {:noreply, []}
   end
 
@@ -31,14 +31,14 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
     |> handle_services_status()
     |> case do
       :none ->
-        Process.send_after(self(), :process, 10)
+        Process.send_after(self(), :process, 100)
         {:noreply, payments}
 
       service ->
         service
         |> process_for_service(payments)
         |> then(fn processed ->
-          Process.send_after(self(), :process, 10)
+          Process.send_after(self(), :process, 100)
 
           filtered_payments =
             Enum.filter(payments, fn payment ->
