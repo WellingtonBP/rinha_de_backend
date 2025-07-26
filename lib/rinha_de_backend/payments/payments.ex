@@ -36,6 +36,10 @@ defmodule RinhaDeBackend.Payments do
     end)
   end
 
+  def purge_payments() do
+    Repo.delete_all(Payments)
+  end
+
   defp maybe_filter_from(query, nil), do: query
 
   defp maybe_filter_from(query, from) do

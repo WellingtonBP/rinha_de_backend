@@ -26,6 +26,12 @@ defmodule RinhaDeBackendWeb.PaymentsController do
     end
   end
 
+  def purge_payments(conn, _) do
+    Payments.purge_payments()
+
+    send_resp(conn, 204, "")
+  end
+
   defp validate_summary_params(%{"from" => fromstr, "to" => tostr})
        when not is_nil(fromstr) and not is_nil(tostr) do
     case {DateTime.from_iso8601(fromstr), DateTime.from_iso8601(tostr)} do
