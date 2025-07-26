@@ -14,7 +14,8 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
   end
 
   def schedule do
-    Process.send_after(self(), :run, 5001)
+    delay = 5000 + :rand.uniform(50)
+    Process.send_after(self(), :run, delay)
   end
 
   def handle_info(:run, _) do
@@ -23,7 +24,8 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
         true ->
           PaymentService.get_services_status()
           |> tap(fn new_state ->
-            update_data(new_state)
+            old_state = get_status()
+            update_data(new_state, old_state)
             release_lock()
           end)
           |> then(&{:ok, &1})
@@ -62,15 +64,21 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
     |> Enum.into(%{})
   end
 
-  defp update_data(data) do
+  defp update_data(data, old) do
     Enum.each(data, fn
       {_service, :error} ->
         :error
 
       {service, %{failing: failing, min_response_time: min_response_time}} ->
-        %{failing: failing, delay: min_response_time}
-        |> then(&PaymentServices.changeset(%PaymentServices{name: to_string(service)}, &1))
-        |> Repo.update()
+        case old[service] do
+          %{failing: ^failing, min_response_time: ^min_response_time} ->
+            :not_update
+
+          _ ->
+            %{failing: failing, delay: min_response_time}
+            |> then(&PaymentServices.changeset(%PaymentServices{name: to_string(service)}, &1))
+            |> Repo.update()
+        end
     end)
   end
 

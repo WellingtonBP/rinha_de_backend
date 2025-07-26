@@ -32,21 +32,9 @@ defmodule RinhaDeBackendWeb do
   def controller do
     quote do
       use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: RinhaDeBackendWeb.Layouts]
+        formats: [:json]
 
       import Plug.Conn
-
-      unquote(verified_routes())
-    end
-  end
-
-  def verified_routes do
-    quote do
-      use Phoenix.VerifiedRoutes,
-        endpoint: RinhaDeBackendWeb.Endpoint,
-        router: RinhaDeBackendWeb.Router,
-        statics: RinhaDeBackendWeb.static_paths()
     end
   end
 

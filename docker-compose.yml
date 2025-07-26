@@ -11,8 +11,8 @@ x-service-templates:
     deploy:
       resources:
         limits:
-          cpus: '0.65'
-          memory: '130MB'
+          cpus: '0.56'
+          memory: '127MB'
 
   db: &db
     image: postgres:17-alpine
@@ -27,8 +27,8 @@ x-service-templates:
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: '78MB'
+          cpus: '0.28'
+          memory: '86MB'
 
   server: &server
     image: nginx:1.27.5-alpine
@@ -42,7 +42,7 @@ x-service-templates:
       resources:
         limits:
           cpus: '0.1'
-          memory: '12MB'
+          memory: '10MB'
 
 services:
   db:

@@ -22,7 +22,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   end
 
   def handle_info(:process, []) do
-    Process.send_after(self(), :process, 100)
+    Process.send_after(self(), :process, 50)
     {:noreply, []}
   end
 
@@ -31,21 +31,25 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
     |> handle_services_status()
     |> case do
       :none ->
-        Process.send_after(self(), :process, 100)
+        Process.send_after(self(), :process, 250)
         {:noreply, payments}
 
       service ->
         service
         |> process_for_service(payments)
         |> then(fn processed ->
-          Process.send_after(self(), :process, 100)
-
           filtered_payments =
-            Enum.filter(payments, fn payment ->
-              not Enum.any?(processed, fn processed_payment ->
-                Map.get(processed_payment, :correlation_id) == Map.get(payment, :correlation_id)
-              end)
-            end)
+            if length(processed) == length(payments),
+              do: [],
+              else:
+                Enum.filter(payments, fn payment ->
+                  not Enum.any?(processed, fn processed_payment ->
+                    Map.get(processed_payment, :correlation_id) ==
+                      Map.get(payment, :correlation_id)
+                  end)
+                end)
+
+          Process.send_after(self(), :process, 0)
 
           {:noreply, filtered_payments}
         end)
@@ -68,16 +72,18 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
             nil
 
           :ok ->
-            payment_with_date_and_service
+            tap(
+              payment_with_date_and_service,
+              &insert_payments([&1])
+            )
         end
       end,
-      max_concurrency: 10
+      max_concurrency: 8
     )
     |> Enum.reduce([], fn
       {:ok, nil}, acc -> acc
       {:ok, payment}, acc -> [payment | acc]
     end)
-    |> tap(&insert_payments/1)
   end
 
   defp handle_services_status(%{default: %{failing: false, min_response_time: delay}})
@@ -92,7 +98,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
 
   defp handle_services_status(_), do: :none
 
-  defp insert_payments(payments) do
+  def insert_payments(payments) do
     Repo.insert_all(Payments, payments)
   end
 end

@@ -8,7 +8,7 @@ defmodule RinhaDeBackend.Application do
       {Finch,
        name: RinhaDeBackend.Finch,
        pools: %{
-         :default => [size: 10, count: 1]
+         :default => [size: 8, count: 1]
        }},
       RinhaDeBackendWeb.Endpoint,
       RinhaDeBackend.Payments.Workers.ServicesStatus,

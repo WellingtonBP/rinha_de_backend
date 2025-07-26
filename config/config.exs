@@ -8,22 +8,12 @@
 import Config
 
 config :rinha_de_backend,
-  ecto_repos: [RinhaDeBackend.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  ecto_repos: [RinhaDeBackend.Repo]
 
 # Configures the endpoint
 config :rinha_de_backend, RinhaDeBackendWeb.Endpoint,
   url: [host: "localhost"],
-  adapter: Bandit.PhoenixAdapter,
-  render_errors: [
-    formats: [json: RinhaDeBackendWeb.ErrorJSON],
-    layout: false
-  ]
-
-# Configures Elixir's Logger
-config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
+  adapter: Bandit.PhoenixAdapter
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
