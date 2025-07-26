@@ -21,7 +21,6 @@ x-service-templates:
       POSTGRES_PASSWORD: rinha
       POSTGRES_DB: db
     volumes:
-      - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - rinha-backend-ex
