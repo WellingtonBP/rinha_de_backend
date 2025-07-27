@@ -10,31 +10,31 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
 
   def init(_) do
     Process.send_after(self(), :process, 1000)
-    {:ok, []}
+    {:ok, {0, []}}
   end
 
   def new(payment) do
     GenServer.cast(__MODULE__, {:new, payment})
   end
 
-  def handle_cast({:new, payment}, payments) do
-    {:noreply, [payment | payments]}
+  def handle_cast({:new, payment}, {default_failing_count, payments}) do
+    {:noreply, {default_failing_count, [payment | payments]}}
   end
 
-  def handle_info(:process, []) do
+  def handle_info(:process, {default_failing_count, []}) do
     Process.send_after(self(), :process, 50)
-    {:noreply, []}
+    {:noreply, {default_failing_count, []}}
   end
 
-  def handle_info(:process, payments) do
+  def handle_info(:process, {default_failing_count, payments}) do
     ServicesStatus.get_status()
-    |> handle_services_status()
+    |> handle_services_status(default_failing_count)
     |> case do
-      :none ->
+      {:none, new_default_failing_count} ->
         Process.send_after(self(), :process, 250)
-        {:noreply, payments}
+        {:noreply, {new_default_failing_count, payments}}
 
-      service ->
+      {service, new_default_failing_count} ->
         service
         |> process_for_service(payments)
         |> then(fn processed ->
@@ -51,7 +51,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
 
           Process.send_after(self(), :process, 0)
 
-          {:noreply, filtered_payments}
+          {:noreply, {new_default_failing_count, filtered_payments}}
         end)
     end
   end
@@ -86,17 +86,22 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
     end)
   end
 
-  defp handle_services_status(%{default: %{failing: false, min_response_time: delay}})
+  defp handle_services_status(%{default: %{failing: false, min_response_time: delay}}, _)
        when delay <= 500 do
-    :default
+    {:default, 0}
   end
 
-  defp handle_services_status(%{fallback: %{failing: false, min_response_time: delay}})
+  defp handle_services_status(_, default_failing_count)
+       when default_failing_count <= 20 do
+    {:default, default_failing_count + 1}
+  end
+
+  defp handle_services_status(%{fallback: %{failing: false, min_response_time: delay}}, _)
        when delay <= 0 do
-    :fallback
+    {:fallback, 0}
   end
 
-  defp handle_services_status(_), do: :none
+  defp handle_services_status(_, _), do: {:none, 0}
 
   def insert_payments(payments) do
     Repo.insert_all(Payments, payments)
