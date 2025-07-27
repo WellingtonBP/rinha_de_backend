@@ -1,18 +1,26 @@
-# RinhaDeBackend
+# Rinha de Backend 2025 - Elixir/Phoenix
 
-To start your Phoenix server:
+Implementação do desafio da [Rinha de Backend 2025](https://github.com/zanfranceschi/rinha-de-backend-2025/tree/main) (processador de pagamentos) utilizando Elixir com o framework Phoenix.
 
-  * Run `mix setup` to install and setup dependencies
-  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+## 🛠️ Tecnologias Utilizadas
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+- **Elixir** (v1.18.4) com **Phoenix** (v1.7+)
+- **PostgreSQL** como banco de dados principal
+- **Nginx** como load balancer reverso
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+## 🚀 Como rodar
 
-## Learn more
+1. **Clone o repositório**
 
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+```bash
+git clone https://github.com/WellingtonBP/rinha_de_backend
+cd rinha_de_backend
+```
+
+2. **Suba com Docker Compose**
+
+```bash
+docker-compose up --build
+```
+
+O serviço estará disponível em `http://localhost:9999`.
