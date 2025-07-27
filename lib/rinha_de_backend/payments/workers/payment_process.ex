@@ -87,7 +87,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   end
 
   defp handle_services_status(%{default: %{failing: false, min_response_time: delay}})
-       when delay <= 0 do
+       when delay <= 500 do
     :default
   end
 
