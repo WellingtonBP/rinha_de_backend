@@ -4,8 +4,9 @@ defmodule RinhaDeBackendWeb.PaymentsController do
   alias RinhaDeBackend.Payments
 
   def add_payment(conn, body) do
+    conn = send_resp(conn, 204, "")
     Payments.new_payment(body)
-    send_resp(conn, 204, "")
+    conn
   end
 
   def summary(conn, params) do
