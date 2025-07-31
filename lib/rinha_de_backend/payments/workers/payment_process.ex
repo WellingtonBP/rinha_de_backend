@@ -2,9 +2,6 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   use GenServer
 
   alias RinhaDeBackend.Payments.Workers.ServicesStatus
-  alias RinhaDeBackend.Payments.Integrations.PaymentService
-  alias RinhaDeBackend.Payments.Schemas.Payments
-  alias RinhaDeBackend.Repo
 
   def start_link(_), do: GenServer.start_link(__MODULE__, :no_args, name: __MODULE__)
 
@@ -58,31 +55,21 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
 
   def process_for_service(service, payments) do
     payments
-    |> Task.async_stream(
-      fn payment ->
-        payment_with_date_and_service =
-          DateTime.utc_now()
-          |> then(&Map.put(payment, :inserted_at, &1))
-          |> Map.put(:service_name, to_string(service))
-
-        service
-        |> PaymentService.do_payment(payment_with_date_and_service)
-        |> case do
-          :error ->
-            nil
-
-          :ok ->
-            tap(
-              payment_with_date_and_service,
-              &insert_payments([&1])
-            )
-        end
-      end,
-      max_concurrency: 8
-    )
+    |> Enum.map(fn payment ->
+      Task.async(fn ->
+        :poolboy.transaction(
+          :worker,
+          fn pid ->
+            GenServer.call(pid, {payment, service}, :infinity)
+          end,
+          :infinity
+        )
+      end)
+    end)
+    |> Task.await_many(:infinity)
     |> Enum.reduce([], fn
-      {:ok, nil}, acc -> acc
-      {:ok, payment}, acc -> [payment | acc]
+      nil, acc -> acc
+      payment, acc -> [payment | acc]
     end)
   end
 
@@ -102,8 +89,4 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   end
 
   defp handle_services_status(_, _), do: {:none, 0}
-
-  def insert_payments(payments) do
-    Repo.insert_all(Payments, payments)
-  end
 end

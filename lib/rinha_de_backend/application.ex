@@ -12,7 +12,13 @@ defmodule RinhaDeBackend.Application do
        }},
       RinhaDeBackendWeb.Endpoint,
       RinhaDeBackend.Payments.Workers.ServicesStatus,
-      RinhaDeBackend.Payments.Workers.PaymentProcess
+      RinhaDeBackend.Payments.Workers.PaymentProcess,
+      :poolboy.child_spec(:worker,
+        name: {:local, :worker},
+        worker_module: RinhaDeBackend.Payments.Workers.PaymentProcessPollboyWorker,
+        size: 6,
+        max_overflow: 2
+      )
     ]
 
     opts = [strategy: :one_for_one, name: RinhaDeBackend.Supervisor]
