@@ -5,14 +5,15 @@ x-service-templates:
       DB_CONN_URL: ecto://rinha:rinha@rinha-db/db
       PAYMENT_SERVICE_URL_DEFAULT: http://payment-processor-default:8080
       PAYMENT_SERVICE_URL_FALLBACK: http://payment-processor-fallback:8080
+      WORKERS_COUNT: 7
     networks:
       - payment-processor
       - rinha-backend-ex
     deploy:
       resources:
         limits:
-          cpus: '0.56'
-          memory: '127MB'
+          cpus: '0.55'
+          memory: '126MB'
 
   db: &db
     image: postgres:17-alpine
@@ -41,8 +42,8 @@ x-service-templates:
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: '10MB'
+          cpus: '0.12'
+          memory: '12MB'
 
 services:
   db:

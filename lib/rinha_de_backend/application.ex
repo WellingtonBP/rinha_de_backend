@@ -3,20 +3,22 @@ defmodule RinhaDeBackend.Application do
 
   @impl true
   def start(_type, _args) do
+    workers_count = String.to_integer(System.get_env("WORKERS_COUNT", 7))
+
     children = [
       RinhaDeBackend.Repo,
       {Finch,
        name: RinhaDeBackend.Finch,
        pools: %{
-         :default => [size: 5, count: 1]
+         :default => [size: workers_count, count: 1]
        }},
       RinhaDeBackendWeb.Endpoint,
-      RinhaDeBackend.Payments.Workers.ServicesStatus,
+      # RinhaDeBackend.Payments.Workers.ServicesStatus,
       RinhaDeBackend.Payments.Workers.PaymentProcess,
       :poolboy.child_spec(:worker,
         name: {:local, :worker},
         worker_module: RinhaDeBackend.Payments.Workers.PaymentProcessPollboyWorker,
-        size: 5
+        size: workers_count
       )
     ]
 
