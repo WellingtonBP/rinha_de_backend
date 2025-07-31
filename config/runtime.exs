@@ -10,7 +10,7 @@ if config_env() == :prod do
 
   config :rinha_de_backend, RinhaDeBackend.Repo,
     url: database_url,
-    pool_size: 10,
+    pool_size: 6,
     ssl: false,
     stacktrace: false,
     show_sensitive_data_on_connection_error: false

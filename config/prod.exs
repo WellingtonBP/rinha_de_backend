@@ -1,4 +1,4 @@
 import Config
 
 # Low log level
-config :logger, level: :error
+config :logger, level: :emergency

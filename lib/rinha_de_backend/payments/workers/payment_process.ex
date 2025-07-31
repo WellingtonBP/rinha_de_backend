@@ -1,92 +1,53 @@
 defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   use GenServer
 
-  alias RinhaDeBackend.Payments.Workers.ServicesStatus
-
   def start_link(_), do: GenServer.start_link(__MODULE__, :no_args, name: __MODULE__)
 
   def init(_) do
-    Process.send_after(self(), :process, 1000)
-    {:ok, {0, []}}
+    {:ok, {0, :default, :queue.new()}}
   end
 
   def new(payment) do
     GenServer.cast(__MODULE__, {:new, payment})
   end
 
-  def handle_cast({:new, payment}, {default_failing_count, payments}) do
-    {:noreply, {default_failing_count, [payment | payments]}}
+  def handle_call(:get, _, {_, :none, _} = s) do
+    {:reply, :none, s}
   end
 
-  def handle_info(:process, {default_failing_count, []}) do
-    Process.send_after(self(), :process, 0)
-    {:noreply, {default_failing_count, []}}
-  end
+  def handle_call(:get, _, {default_failing_count, service, payments}) do
+    case :queue.out_r(payments) do
+      {:empty, _} ->
+        {:reply, :none, {default_failing_count, service, payments}}
 
-  def handle_info(:process, {default_failing_count, payments}) do
-    ServicesStatus.get_status()
-    |> handle_services_status(default_failing_count)
-    |> case do
-      {:none, new_default_failing_count} ->
-        Process.send_after(self(), :process, 150)
-        {:noreply, {new_default_failing_count, payments}}
-
-      {service, new_default_failing_count} ->
-        service
-        |> process_for_service(payments)
-        |> then(fn processed ->
-          filtered_payments =
-            if length(processed) == length(payments),
-              do: [],
-              else:
-                Enum.filter(payments, fn payment ->
-                  not Enum.any?(processed, fn processed_payment ->
-                    Map.get(processed_payment, :correlation_id) ==
-                      Map.get(payment, :correlation_id)
-                  end)
-                end)
-
-          Process.send_after(self(), :process, 0)
-
-          {:noreply, {new_default_failing_count, filtered_payments}}
-        end)
+      {{:value, payment}, remaining_payments} ->
+        {:reply, {payment, service}, {default_failing_count, service, remaining_payments}}
     end
   end
 
-  def process_for_service(service, payments) do
-    payments
-    |> Enum.map(fn payment ->
-      Task.async(fn ->
-        :poolboy.transaction(
-          :worker,
-          fn pid ->
-            GenServer.call(pid, {payment, service}, :infinity)
-          end,
-          :infinity
-        )
-      end)
-    end)
-    |> Task.await_many(:infinity)
-    |> Enum.reduce([], fn
-      nil, acc -> acc
-      payment, acc -> [payment | acc]
-    end)
+  def handle_cast({:new, payment}, {default_failing_count, service, payments}) do
+    {:noreply, {default_failing_count, service, :queue.in(payment, payments)}}
   end
 
-  defp handle_services_status(%{default: %{failing: false, min_response_time: delay}}, _)
-       when delay <= 50 do
+  def handle_cast({:services_status, status}, {default_failing_count, _, payments}) do
+    {service, new_default_failing_count} = handle_services_status(status, default_failing_count)
+    {:noreply, {new_default_failing_count, service, payments}}
+  end
+
+  def handle_services_status(%{default: %{failing: false, min_response_time: delay}}, _)
+      when delay <= 50 do
     {:default, 0}
   end
 
-  defp handle_services_status(_, default_failing_count)
-       when default_failing_count <= 25 do
+  def handle_services_status(_, default_failing_count)
+      when default_failing_count <= 3 do
     {:default, default_failing_count + 1}
   end
 
-  defp handle_services_status(%{fallback: %{failing: false, min_response_time: delay}}, _)
-       when delay <= 0 do
+  def handle_services_status(%{fallback: %{failing: false, min_response_time: delay}}, _)
+      when delay <= 0 do
     {:fallback, 0}
   end
 
-  defp handle_services_status(_, _), do: {:none, 0}
+  def handle_services_status(_, _), do: {:none, 0}
 end

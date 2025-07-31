@@ -3,6 +3,7 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
 
   alias RinhaDeBackend.Payments.Schemas.PaymentServices
   alias RinhaDeBackend.Payments.Integrations.PaymentService
+  alias RinhaDeBackend.Payments.Workers.PaymentProcess
   alias RinhaDeBackend.Repo
 
   def start_link(_), do: GenServer.start_link(__MODULE__, :no_args)
@@ -10,7 +11,11 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
   def init(_) do
     schedule()
 
-    {:ok, :no_args}
+    {:ok,
+     %{
+       default: %{failing: false, min_response_time: 0},
+       fallback: %{failing: false, min_response_time: 0}
+     }}
   end
 
   def schedule do
@@ -18,14 +23,15 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
     Process.send_after(self(), :run, delay)
   end
 
-  def handle_info(:run, _) do
+  def handle_info(:run, state) do
+    schedule()
+
     Repo.transact(fn ->
       case try_lock() do
         true ->
           PaymentService.get_services_status()
           |> tap(fn new_state ->
-            old_state = get_status()
-            update_data(new_state, old_state)
+            update_data(new_state, state)
             release_lock()
           end)
           |> then(&{:ok, &1})
@@ -35,9 +41,8 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
       end
     end)
     |> then(fn {:ok, state} ->
-      schedule()
-      set_status(state)
-      {:noreply, :no_args}
+      GenServer.cast(PaymentProcess, {:services_status, state})
+      {:noreply, state}
     end)
   end
 
@@ -80,16 +85,5 @@ defmodule RinhaDeBackend.Payments.Workers.ServicesStatus do
             |> Repo.update()
         end
     end)
-  end
-
-  defp set_status(state) do
-    :persistent_term.put(:services_status, state)
-  end
-
-  def get_status do
-    :persistent_term.get(:services_status, %{
-      default: %{failing: false, min_response_time: 0},
-      fallback: %{failing: false, min_response_time: 0}
-    })
   end
 end

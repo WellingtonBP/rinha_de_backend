@@ -8,7 +8,7 @@ defmodule RinhaDeBackend.Application do
       {Finch,
        name: RinhaDeBackend.Finch,
        pools: %{
-         :default => [size: 8, count: 1]
+         :default => [size: 5, count: 1]
        }},
       RinhaDeBackendWeb.Endpoint,
       RinhaDeBackend.Payments.Workers.ServicesStatus,
@@ -16,8 +16,7 @@ defmodule RinhaDeBackend.Application do
       :poolboy.child_spec(:worker,
         name: {:local, :worker},
         worker_module: RinhaDeBackend.Payments.Workers.PaymentProcessPollboyWorker,
-        size: 6,
-        max_overflow: 2
+        size: 5
       )
     ]
 
