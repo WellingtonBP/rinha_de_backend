@@ -19,7 +19,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   end
 
   def handle_info(:process, {default_failing_count, []}) do
-    Process.send_after(self(), :process, 50)
+    Process.send_after(self(), :process, 0)
     {:noreply, {default_failing_count, []}}
   end
 
@@ -28,7 +28,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
     |> handle_services_status(default_failing_count)
     |> case do
       {:none, new_default_failing_count} ->
-        Process.send_after(self(), :process, 250)
+        Process.send_after(self(), :process, 150)
         {:noreply, {new_default_failing_count, payments}}
 
       {service, new_default_failing_count} ->
@@ -74,12 +74,12 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   end
 
   defp handle_services_status(%{default: %{failing: false, min_response_time: delay}}, _)
-       when delay <= 500 do
+       when delay <= 50 do
     {:default, 0}
   end
 
   defp handle_services_status(_, default_failing_count)
-       when default_failing_count <= 20 do
+       when default_failing_count <= 25 do
     {:default, default_failing_count + 1}
   end
 
