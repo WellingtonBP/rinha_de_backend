@@ -1,35 +1,14 @@
 x-service-templates:
   api: &api # image: wellingtonbp/rinha_de_backend_ex:latest
     build: .
-    environment:
-      DB_CONN_URL: ecto://rinha:rinha@rinha-db/db
-      PAYMENT_SERVICE_URL_DEFAULT: http://payment-processor-default:8080
-      PAYMENT_SERVICE_URL_FALLBACK: http://payment-processor-fallback:8080
-      WORKERS_COUNT: 6
     networks:
       - payment-processor
       - rinha-backend-ex
     deploy:
       resources:
         limits:
-          cpus: '0.55'
-          memory: '126MB'
-
-  db: &db
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_USER: rinha
-      POSTGRES_PASSWORD: rinha
-      POSTGRES_DB: db
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - rinha-backend-ex
-    deploy:
-      resources:
-        limits:
-          cpus: '0.28'
-          memory: '86MB'
+          cpus: '0.65'
+          memory: '160MB'
 
   server: &server
     image: nginx:1.27.5-alpine
@@ -42,28 +21,35 @@ x-service-templates:
     deploy:
       resources:
         limits:
-          cpus: '0.12'
-          memory: '12MB'
+          cpus: '0.2'
+          memory: '30MB'
 
 services:
-  db:
-    <<: *db
-    container_name: rinha-db
-    hostname: rinha-db
-
   api1:
     <<: *api
     container_name: api-1
     hostname: api-1
-    depends_on:
-      - db
+    environment:
+      PAYMENT_SERVICE_URL_DEFAULT: http://payment-processor-default:8080
+      PAYMENT_SERVICE_URL_FALLBACK: http://payment-processor-fallback:8080
+      WORKERS_COUNT: 6
+      RELEASE_COOKIE: rinha
+      RELEASE_NODE: api@api1
+      RELEASE_DISTRIBUTION: sname
+      SIBLING: api@api2
 
   api2:
     <<: *api
     container_name: api-2
     hostname: api-2
-    depends_on:
-      - db
+    environment:
+      PAYMENT_SERVICE_URL_DEFAULT: http://payment-processor-default:8080
+      PAYMENT_SERVICE_URL_FALLBACK: http://payment-processor-fallback:8080
+      WORKERS_COUNT: 6
+      RELEASE_COOKIE: rinha
+      RELEASE_NODE: api@api2
+      RELEASE_DISTRIBUTION: sname
+      SIBLING: api@api1
 
   lb:
     <<: *server

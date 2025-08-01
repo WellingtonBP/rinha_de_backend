@@ -38,9 +38,6 @@ defmodule RinhaDeBackend.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.7.21"},
-      {:phoenix_ecto, "~> 4.5"},
-      {:ecto_sql, "~> 3.10"},
-      {:postgrex, ">= 0.0.0"},
       {:finch, "~> 0.13"},
       {:jason, "~> 1.2"},
       {:bandit, "~> 1.5"}

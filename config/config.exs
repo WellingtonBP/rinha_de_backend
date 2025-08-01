@@ -7,9 +7,6 @@
 # General application configuration
 import Config
 
-config :rinha_de_backend,
-  ecto_repos: [RinhaDeBackend.Repo]
-
 # Configures the endpoint
 config :rinha_de_backend, RinhaDeBackendWeb.Endpoint,
   url: [host: "localhost"],

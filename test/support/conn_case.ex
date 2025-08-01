@@ -30,9 +30,4 @@ defmodule RinhaDeBackendWeb.ConnCase do
       import RinhaDeBackendWeb.ConnCase
     end
   end
-
-  setup tags do
-    RinhaDeBackend.DataCase.setup_sandbox(tags)
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
-  end
 end

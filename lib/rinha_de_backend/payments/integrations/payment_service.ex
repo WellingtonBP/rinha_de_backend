@@ -20,31 +20,6 @@ defmodule RinhaDeBackend.Payments.Integrations.PaymentService do
     end
   end
 
-  def get_services_status() do
-    services()
-    |> Enum.map(fn {service, url} ->
-      url
-      |> then(&Finch.build(:get, "#{&1}/payments/service-health"))
-      |> Finch.request(RinhaDeBackend.Finch)
-      |> case do
-        {:ok, %Finch.Response{status: 200, body: body}} ->
-          body
-          |> JSON.decode()
-          |> then(fn
-            {:ok, %{"failing" => failing, "minResponseTime" => time}} ->
-              {service, %{failing: failing, min_response_time: time}}
-
-            {:error, _} ->
-              {service, :error}
-          end)
-
-        _ ->
-          {service, :error}
-      end
-    end)
-    |> Enum.into(%{})
-  end
-
   defp services do
     %{
       default: Application.get_env(:payment_services, :default_url),
