@@ -5,15 +5,15 @@ x-service-templates:
       DB_CONN_URL: ecto://rinha:rinha@rinha-db/db
       PAYMENT_SERVICE_URL_DEFAULT: http://payment-processor-default:8080
       PAYMENT_SERVICE_URL_FALLBACK: http://payment-processor-fallback:8080
-      WORKERS_COUNT: 6
+      WORKERS_COUNT: 5
     networks:
       - payment-processor
       - rinha-backend-ex
     deploy:
       resources:
         limits:
-          cpus: '0.55'
-          memory: '126MB'
+          cpus: '0.57'
+          memory: '120MB'
 
   db: &db
     image: postgres:17-alpine
@@ -25,11 +25,12 @@ x-service-templates:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - rinha-backend-ex
+    command: 'postgres -c max_connections=10 -c synchronous_commit=off -c fsync=off -c full_page_writes=off'
     deploy:
       resources:
         limits:
-          cpus: '0.28'
-          memory: '86MB'
+          cpus: '0.20'
+          memory: '90MB'
 
   server: &server
     image: nginx:1.27.5-alpine
@@ -42,8 +43,8 @@ x-service-templates:
     deploy:
       resources:
         limits:
-          cpus: '0.12'
-          memory: '12MB'
+          cpus: '0.16'
+          memory: '20MB'
 
 services:
   db:

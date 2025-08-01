@@ -3,7 +3,7 @@ defmodule RinhaDeBackend.Application do
 
   @impl true
   def start(_type, _args) do
-    workers_count = String.to_integer(System.get_env("WORKERS_COUNT", "6"))
+    workers_count = String.to_integer(System.get_env("WORKERS_COUNT", "5"))
 
     children = [
       RinhaDeBackend.Repo,
@@ -15,6 +15,7 @@ defmodule RinhaDeBackend.Application do
        }},
       RinhaDeBackendWeb.Endpoint,
       RinhaDeBackend.Payments.Workers.ServicesStatus,
+      RinhaDeBackend.Payments.Workers.PaymentPersist,
       {RinhaDeBackend.Payments.Workers.PaymentProcess, workers_count}
     ]
 

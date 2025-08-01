@@ -2,8 +2,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcessWorker do
   use GenServer
 
   alias RinhaDeBackend.Payments.Integrations.PaymentService
-  alias RinhaDeBackend.Payments.Schemas.Payments
-  alias RinhaDeBackend.Repo
+  alias RinhaDeBackend.Payments.Workers.PaymentPersist
   alias RinhaDeBackend.Payments.Workers.PaymentProcess
 
   def start_link(_) do
@@ -18,7 +17,7 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcessWorker do
   def handle_info(:process, state) do
     case GenServer.call(PaymentProcess, :get, :infinity) do
       :none ->
-        Process.send_after(self(), :process, 100)
+        Process.send_after(self(), :process, 500)
 
       {payment, service} ->
         payment_with_date_and_service =
@@ -31,18 +30,14 @@ defmodule RinhaDeBackend.Payments.Workers.PaymentProcessWorker do
         |> case do
           :error ->
             GenServer.cast(PaymentProcess, {:new, payment})
-            Process.send_after(self(), :process, 100)
+            Process.send_after(self(), :process, 500)
 
           :ok ->
-            insert_payments([payment_with_date_and_service])
+            GenServer.cast(PaymentPersist, {:new, payment_with_date_and_service})
             Process.send_after(self(), :process, 0)
         end
     end
 
     {:noreply, state}
-  end
-
-  def insert_payments(payments) do
-    Repo.insert_all(Payments, payments)
   end
 end
