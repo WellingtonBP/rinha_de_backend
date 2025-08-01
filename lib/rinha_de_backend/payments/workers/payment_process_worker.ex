@@ -1,4 +1,4 @@
-defmodule RinhaDeBackend.Payments.Workers.PaymentProcessPollboyWorker do
+defmodule RinhaDeBackend.Payments.Workers.PaymentProcessWorker do
   use GenServer
 
   alias RinhaDeBackend.Payments.Integrations.PaymentService

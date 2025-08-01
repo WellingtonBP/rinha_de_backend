@@ -43,8 +43,7 @@ defmodule RinhaDeBackend.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:finch, "~> 0.13"},
       {:jason, "~> 1.2"},
-      {:bandit, "~> 1.5"},
-      {:poolboy, "~> 1.5.1"}
+      {:bandit, "~> 1.5"}
     ]
   end
 end

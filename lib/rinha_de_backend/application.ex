@@ -3,10 +3,11 @@ defmodule RinhaDeBackend.Application do
 
   @impl true
   def start(_type, _args) do
-    workers_count = String.to_integer(System.get_env("WORKERS_COUNT", "7"))
+    workers_count = String.to_integer(System.get_env("WORKERS_COUNT", "6"))
 
     children = [
       RinhaDeBackend.Repo,
+      RinhaDeBackend.Payments.Workers.PaymentProcessDynamicSupervisor,
       {Finch,
        name: RinhaDeBackend.Finch,
        pools: %{
@@ -14,12 +15,7 @@ defmodule RinhaDeBackend.Application do
        }},
       RinhaDeBackendWeb.Endpoint,
       RinhaDeBackend.Payments.Workers.ServicesStatus,
-      RinhaDeBackend.Payments.Workers.PaymentProcess,
-      :poolboy.child_spec(:worker,
-        name: {:local, :worker},
-        worker_module: RinhaDeBackend.Payments.Workers.PaymentProcessPollboyWorker,
-        size: workers_count
-      )
+      {RinhaDeBackend.Payments.Workers.PaymentProcess, workers_count}
     ]
 
     opts = [strategy: :one_for_one, name: RinhaDeBackend.Supervisor]

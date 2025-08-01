@@ -1,9 +1,15 @@
 defmodule RinhaDeBackend.Payments.Workers.PaymentProcess do
   use GenServer
 
-  def start_link(_), do: GenServer.start_link(__MODULE__, :no_args, name: __MODULE__)
+  def start_link(workers_count),
+    do: GenServer.start_link(__MODULE__, workers_count, name: __MODULE__)
 
-  def init(_) do
+  def init(workers_count) do
+    1..workers_count
+    |> Enum.each(fn _ ->
+      RinhaDeBackend.Payments.Workers.PaymentProcessDynamicSupervisor.add_worker()
+    end)
+
     {:ok, {0, :default, :queue.new()}}
   end
 

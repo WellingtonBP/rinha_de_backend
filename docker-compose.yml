@@ -5,7 +5,7 @@ x-service-templates:
       DB_CONN_URL: ecto://rinha:rinha@rinha-db/db
       PAYMENT_SERVICE_URL_DEFAULT: http://payment-processor-default:8080
       PAYMENT_SERVICE_URL_FALLBACK: http://payment-processor-fallback:8080
-      WORKERS_COUNT: 7
+      WORKERS_COUNT: 6
     networks:
       - payment-processor
       - rinha-backend-ex
